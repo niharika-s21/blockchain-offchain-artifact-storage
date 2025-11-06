@@ -46,7 +46,7 @@ This system links these documents **off-chain** (via IPFS) while storing only th
 Quick local setup:
 ```bash
 # clone repo
-git clone [https://github.com/<your-org>/offchain-artifact-storage](https://github.com/niharika-s21/blockchain-offchain-artifact-storage)
+git clone https://github.com/niharika-s21/blockchain-offchain-artifact-storage
 cd offchain-artifact-storage
 
 # install dependencies
