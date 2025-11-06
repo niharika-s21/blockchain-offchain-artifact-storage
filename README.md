@@ -23,3 +23,37 @@ This system links these documents **off-chain** (via IPFS) while storing only th
 - **Integrity** — verification via immutable on-chain hash
 - **Transparency** — traceable events for each batch
 - **Efficiency** — large data remains off-chain
+
+## Contents
+- `contracts/` - Draft Solidity contracts:
+  - `BatchProvenance.sol` - main draft contract
+  - `interfaces/` - solidity interfaces / signatures
+- `README.md` - this file
+- `docs/` - design notes & diagrams (optional)
+- `frontend/` - skeleton React app (to be filled)
+- `scripts/` - deploy & test scripts (Hardhat/Foundry/Truffle templates)
+- `LICENSE` - project license (recommend MIT)
+
+## Dependencies / setup (draft)
+- Node.js >= 18
+- npm or yarn
+- Hardhat (recommended) or Truffle
+- Solidity ^0.8.19
+- IPFS node / Pinning service (e.g., Pinata or Infura IPFS) for storing artifacts
+- MetaMask for frontend demo
+- (Optional) Polygon / Sepolia testnet account and some test ETH/MATIC
+
+Quick local setup:
+```bash
+# clone repo
+git clone [https://github.com/<your-org>/offchain-artifact-storage](https://github.com/niharika-s21/blockchain-offchain-artifact-storage)
+cd offchain-artifact-storage
+
+# install dependencies
+npm install
+
+# start local hardhat node
+npx hardhat node
+
+# run tests
+npx hardhat test
