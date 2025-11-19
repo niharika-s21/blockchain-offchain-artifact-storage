@@ -1,0 +1,18 @@
+{
+  "name": "blockchain-offchain-artifact-storage",
+  "version": "1.0.0",
+  "description": "## 📘 Project Overview This project implements a **hybrid blockchain framework** that enables secure, verifiable storage of supply-chain artifacts without placing large or private data directly on-chain.   It combines **on-chain metadata and integrity verification** with **off-chain artifact storage** (e.g., IPFS), maintaining transparency, provenance, and data integrity across distributed participants.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^17.2.3",
+    "hardhat": "^2.27.0"
+  }
+}
