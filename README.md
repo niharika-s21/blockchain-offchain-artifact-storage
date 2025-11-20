@@ -9,10 +9,10 @@ It combines **on-chain metadata and integrity verification** with **off-chain ar
   - `BatchProvenance.sol` - main draft contract
   - `interfaces/` - solidity interfaces / signatures
 - `README.md` - this file
-- `docs/` - design notes & diagrams (optional)
+- `docs/` - design notes & diagrams
 - `frontend/` - skeleton React app (to be filled)
 - `scripts/` - deploy & test scripts (Hardhat/Foundry/Truffle templates)
-- `LICENSE` - project license (recommend MIT)
+- `LICENSE` - project license
 
 ## 📦 Quick Setup
 
