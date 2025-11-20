@@ -487,6 +487,192 @@ contract SupplyChain {
         );
     }
     
+    // ==================== MULTI-SIG OWNERSHIP TRANSFER ====================
+    
+    /**
+     * @dev Request transfer of batch ownership to a new owner
+     * @param batchId ID of the batch to transfer
+     * @param newOwner Address of the proposed new owner
+     * @param reason Reason for the transfer
+     * @param transportDetails Details about transport method, route, etc.
+     * @return requestId The ID of the created transfer request
+     */
+    function requestTransfer(
+        uint256 batchId,
+        address newOwner,
+        string calldata reason,
+        string calldata transportDetails
+    ) external batchExists(batchId) onlyBatchOwner(batchId) onlyRegisteredParticipant returns (uint256 requestId) {
+        require(newOwner != address(0), "Invalid new owner address");
+        require(newOwner != msg.sender, "Cannot transfer to yourself");
+        require(participants[newOwner].isActive, "New owner is not a registered participant");
+        require(activePendingRequests[batchId] == 0, "Transfer request already pending for this batch");
+        require(bytes(reason).length > 0, "Transfer reason cannot be empty");
+        
+        Batch storage batch = batches[batchId];
+        
+        // Rejected and Consumed batches cannot be transferred
+        require(
+            batch.status != BatchStatus.Rejected && batch.status != BatchStatus.Consumed,
+            "Cannot transfer rejected or consumed batches"
+        );
+        
+        // Generate new request ID
+        requestId = _nextRequestId++;
+        
+        // Create transfer request
+        transferRequests[requestId] = TransferRequest({
+            batchId: batchId,
+            from: msg.sender,
+            to: newOwner,
+            reason: reason,
+            transportDetails: transportDetails,
+            requestedAt: block.timestamp,
+            isActive: true
+        });
+        
+        // Set pending owner and link active request
+        batch.pendingOwner = newOwner;
+        batch.updatedAt = block.timestamp;
+        activePendingRequests[batchId] = requestId;
+        
+        // Create audit trail entry
+        batchAuditTrail[batchId].push(AuditTrail({
+            batchId: batchId,
+            actor: msg.sender,
+            action: "TRANSFER_REQUESTED",
+            details: string(abi.encodePacked("Transfer requested to ", _addressToString(newOwner), ". Reason: ", reason)),
+            timestamp: block.timestamp,
+            locationData: transportDetails
+        }));
+        
+        // Emit events
+        emit TransferRequested(requestId, batchId, msg.sender, newOwner, reason, block.timestamp);
+        emit AuditEntry(batchId, msg.sender, "TRANSFER_REQUESTED", reason, block.timestamp);
+        
+        return requestId;
+    }
+    
+    /**
+     * @dev Accept a pending transfer request (multi-sig second step)
+     * @param requestId ID of the transfer request to accept
+     */
+    function acceptTransfer(uint256 requestId) external validTransferRequest(requestId) onlyRegisteredParticipant {
+        TransferRequest storage request = transferRequests[requestId];
+        Batch storage batch = batches[request.batchId];
+        
+        require(batch.exists, "Batch does not exist");
+        require(batch.currentOwner == request.from, "Original owner has changed");
+        require(batch.pendingOwner == request.to, "Pending owner has changed");
+        
+        // Store previous owner for event
+        address previousOwner = batch.currentOwner;
+        uint256 batchId = request.batchId;
+        
+        // Execute ownership transfer
+        batch.currentOwner = request.to;
+        batch.pendingOwner = address(0);
+        batch.updatedAt = block.timestamp;
+        
+        // Update ownership tracking
+        ownershipHistory[batchId].push(request.to);
+        ownerBatches[request.to].push(batchId);
+        
+        // Deactivate the request
+        request.isActive = false;
+        activePendingRequests[batchId] = 0;
+        
+        // Create audit trail entry
+        batchAuditTrail[batchId].push(AuditTrail({
+            batchId: batchId,
+            actor: msg.sender,
+            action: "TRANSFER_ACCEPTED",
+            details: string(abi.encodePacked("Ownership transferred from ", _addressToString(previousOwner), " to ", _addressToString(request.to))),
+            timestamp: block.timestamp,
+            locationData: ""
+        }));
+        
+        // Emit events
+        emit TransferApproved(requestId, batchId, previousOwner, request.to, block.timestamp);
+        emit OwnershipTransferred(batchId, previousOwner, request.to, block.timestamp);
+        emit AuditEntry(batchId, msg.sender, "TRANSFER_ACCEPTED", "Ownership transferred", block.timestamp);
+    }
+    
+    /**
+     * @dev Reject a pending transfer request
+     * @param requestId ID of the transfer request to reject
+     * @param rejectionReason Reason for rejecting the transfer
+     */
+    function rejectTransfer(uint256 requestId, string calldata rejectionReason) 
+        external 
+        validTransferRequest(requestId) 
+        onlyRegisteredParticipant 
+    {
+        TransferRequest storage request = transferRequests[requestId];
+        Batch storage batch = batches[request.batchId];
+        
+        require(bytes(rejectionReason).length > 0, "Rejection reason cannot be empty");
+        
+        uint256 batchId = request.batchId;
+        
+        // Clear pending transfer
+        batch.pendingOwner = address(0);
+        batch.updatedAt = block.timestamp;
+        
+        // Deactivate the request
+        request.isActive = false;
+        activePendingRequests[batchId] = 0;
+        
+        // Create audit trail entry
+        batchAuditTrail[batchId].push(AuditTrail({
+            batchId: batchId,
+            actor: msg.sender,
+            action: "TRANSFER_REJECTED",
+            details: string(abi.encodePacked("Transfer rejected by ", _addressToString(msg.sender), ". Reason: ", rejectionReason)),
+            timestamp: block.timestamp,
+            locationData: ""
+        }));
+        
+        // Emit events
+        emit TransferRejected(requestId, batchId, request.from, request.to, rejectionReason, block.timestamp);
+        emit AuditEntry(batchId, msg.sender, "TRANSFER_REJECTED", rejectionReason, block.timestamp);
+    }
+    
+    /**
+     * @dev Cancel a transfer request by the original requester
+     * @param requestId ID of the transfer request to cancel
+     */
+    function cancelTransfer(uint256 requestId) external {
+        TransferRequest storage request = transferRequests[requestId];
+        
+        require(request.isActive, "Transfer request is not active");
+        require(request.from == msg.sender, "Only the requester can cancel the transfer");
+        
+        Batch storage batch = batches[request.batchId];
+        uint256 batchId = request.batchId;
+        
+        // Clear pending transfer
+        batch.pendingOwner = address(0);
+        batch.updatedAt = block.timestamp;
+        
+        // Deactivate the request
+        request.isActive = false;
+        activePendingRequests[batchId] = 0;
+        
+        // Create audit trail entry
+        batchAuditTrail[batchId].push(AuditTrail({
+            batchId: batchId,
+            actor: msg.sender,
+            action: "TRANSFER_CANCELLED",
+            details: "Transfer request cancelled by requester",
+            timestamp: block.timestamp,
+            locationData: ""
+        }));
+        
+        // Emit audit entry
+        emit AuditEntry(batchId, msg.sender, "TRANSFER_CANCELLED", "Transfer cancelled", block.timestamp);
+    }
+    
     // ==================== INTERNAL HELPER FUNCTIONS ====================
     
     /**
@@ -567,5 +753,21 @@ contract SupplyChain {
             value /= 10;
         }
         return string(buffer);
+    }
+    
+    /**
+     * @dev Convert address to string for logging
+     */
+    function _addressToString(address addr) internal pure returns (string memory) {
+        bytes32 value = bytes32(uint256(uint160(addr)));
+        bytes memory alphabet = "0123456789abcdef";
+        bytes memory str = new bytes(42);
+        str[0] = '0';
+        str[1] = 'x';
+        for (uint256 i = 0; i < 20; i++) {
+            str[2 + i * 2] = alphabet[uint8(value[i + 12] >> 4)];
+            str[3 + i * 2] = alphabet[uint8(value[i + 12] & 0x0f)];
+        }
+        return string(str);
     }
 }

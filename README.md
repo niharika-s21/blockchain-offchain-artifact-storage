@@ -4,26 +4,6 @@
 This project implements a **hybrid blockchain framework** that enables secure, verifiable storage of supply-chain artifacts without placing large or private data directly on-chain.  
 It combines **on-chain metadata and integrity verification** with **off-chain artifact storage** (e.g., IPFS), maintaining transparency, provenance, and data integrity across distributed participants.
 
----
-
-## ⚙️ Features
-- Register and track batches on blockchain
-- Record ownership and custody transfers
-- Link off-chain certificates (IPFS CIDs) to on-chain records
-- Emit events for transparent audit trails
-- Minimal on-chain storage, maximizing scalability and privacy
-- Extensible design for role-based access and multi-sig approvals
-
----
-
-## 🧠 Concept
-Modern supply chains rely on artifacts such as laboratory reports, quality certificates, and telemetry data.  
-Storing these directly on-chain is costly and poses privacy risks.  
-This system links these documents **off-chain** (via IPFS) while storing only their **content hash and reference** on the blockchain, ensuring:
-- **Integrity** — verification via immutable on-chain hash
-- **Transparency** — traceable events for each batch
-- **Efficiency** — large data remains off-chain
-
 ## Contents
 - `contracts/` - Draft Solidity contracts:
   - `BatchProvenance.sol` - main draft contract
@@ -34,26 +14,54 @@ This system links these documents **off-chain** (via IPFS) while storing only th
 - `scripts/` - deploy & test scripts (Hardhat/Foundry/Truffle templates)
 - `LICENSE` - project license (recommend MIT)
 
-## Dependencies / setup (draft)
-- Node.js >= 18
-- npm or yarn
-- Hardhat (recommended) or Truffle
-- Solidity ^0.8.19
-- IPFS node / Pinning service (e.g., Pinata or Infura IPFS) for storing artifacts
-- MetaMask for frontend demo
-- (Optional) Polygon / Sepolia testnet account and some test ETH/MATIC
+## 📦 Quick Setup
 
-Quick local setup:
 ```bash
-# clone repo
-git clone https://github.com/niharika-s21/blockchain-offchain-artifact-storage
-cd offchain-artifact-storage
+# Navigate to project directory
+cd blockchain-offchain-artifact-storage
 
-# install dependencies
+# Install dependencies
 npm install
 
-# start local hardhat node
+# Compile contracts
+npx hardhat compile
+
+# Run comprehensive test suite (44 tests)
+npx hardhat test
+
+# Run tests with gas reporting
+REPORT_GAS=true npx hardhat test
+
+# Start local Hardhat node (separate terminal)
 npx hardhat node
 
-# run tests
-npx hardhat test
+# Deploy to local network
+npx hardhat run scripts/deploy-and-demo.js --network localhost
+```
+
+## 🖥️ Frontend Setup (NEW!)
+
+The project now includes a complete React.js frontend with TailwindCSS!
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Update contract address in src/context/BlockchainContext.js
+# (Use address from deployment above)
+
+# Start development server
+npm start
+```
+
+
+
+Run tests with:
+```bash
+npx hardhat test                    # Run all tests
+npx hardhat test --grep "Transfer"  # Run transfer tests only
+REPORT_GAS=true npx hardhat test    # Include gas reporting
+```
