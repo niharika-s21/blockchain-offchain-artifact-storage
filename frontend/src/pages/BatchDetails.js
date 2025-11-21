@@ -12,6 +12,10 @@ const BatchDetails = () => {
   const [auditTrail, setAuditTrail] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details'); // details, history, audit
+  const [pendingRequest, setPendingRequest] = useState(null);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState('');
+  const [transferSuccess, setTransferSuccess] = useState('');
 
   useEffect(() => {
     loadBatchData();
@@ -57,6 +61,24 @@ const BatchDetails = () => {
         locationData: entry.locationData
       })));
 
+      // Check for pending transfer
+      if (batchData.pendingOwner !== '0x0000000000000000000000000000000000000000') {
+        try {
+          const request = await contract.getActivePendingRequest(id);
+          setPendingRequest({
+            requestId: Number(await contract.activePendingRequests(id)),
+            from: request.from,
+            to: request.to,
+            reason: request.reason,
+            transportDetails: request.transportDetails,
+            requestedAt: Number(request.requestedAt),
+            isActive: request.isActive
+          });
+        } catch (err) {
+          console.log('No active pending request');
+        }
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Error loading batch:', err);
@@ -66,6 +88,66 @@ const BatchDetails = () => {
 
   const isOwner = batch && batch.currentOwner.toLowerCase() === participant?.address.toLowerCase();
   const isRegulator = participant?.role === 4;
+  const isPendingOwner = batch && batch.pendingOwner.toLowerCase() === participant?.address.toLowerCase();
+
+  const handleAcceptTransfer = async () => {
+    if (!pendingRequest) return;
+    
+    setTransferLoading(true);
+    setTransferError('');
+    setTransferSuccess('');
+
+    try {
+      const tx = await contract.acceptTransfer(pendingRequest.requestId);
+      console.log('Accept transfer tx:', tx.hash);
+      
+      await tx.wait();
+      
+      setTransferSuccess('Transfer accepted successfully! You are now the owner.');
+      
+      // Reload batch data
+      setTimeout(() => {
+        loadBatchData();
+        setTransferSuccess('');
+      }, 2000);
+    } catch (err) {
+      console.error('Error accepting transfer:', err);
+      setTransferError(err.reason || err.message || 'Failed to accept transfer');
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
+  const handleRejectTransfer = async () => {
+    if (!pendingRequest) return;
+    
+    const reason = prompt('Please enter reason for rejection:');
+    if (!reason) return;
+    
+    setTransferLoading(true);
+    setTransferError('');
+    setTransferSuccess('');
+
+    try {
+      const tx = await contract.rejectTransfer(pendingRequest.requestId, reason);
+      console.log('Reject transfer tx:', tx.hash);
+      
+      await tx.wait();
+      
+      setTransferSuccess('Transfer rejected successfully.');
+      
+      // Reload batch data
+      setTimeout(() => {
+        loadBatchData();
+        setTransferSuccess('');
+      }, 2000);
+    } catch (err) {
+      console.error('Error rejecting transfer:', err);
+      setTransferError(err.reason || err.message || 'Failed to reject transfer');
+    } finally {
+      setTransferLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -212,15 +294,68 @@ const BatchDetails = () => {
             </div>
           )}
 
+          {/* Pending Transfer Alert */}
+          {pendingRequest && isPendingOwner && (
+            <div className="card lg:col-span-2 bg-yellow-50 border-2 border-yellow-200">
+              <div className="flex items-start space-x-4">
+                <div className="text-4xl">⚠️</div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Transfer Pending Your Approval</h2>
+                  <p className="text-gray-700 mb-3">
+                    <strong>{formatAddress(pendingRequest.from)}</strong> wants to transfer this batch to you.
+                  </p>
+                  <div className="bg-white rounded-lg p-4 mb-4">
+                    <p className="text-sm text-gray-600 mb-2"><strong>Reason:</strong> {pendingRequest.reason}</p>
+                    <p className="text-sm text-gray-600"><strong>Transport Details:</strong> {pendingRequest.transportDetails}</p>
+                  </div>
+                  
+                  {transferError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-3">
+                      {transferError}
+                    </div>
+                  )}
+                  
+                  {transferSuccess && (
+                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-3">
+                      {transferSuccess}
+                    </div>
+                  )}
+                  
+                  <div className="flex space-x-3">
+                    <button 
+                      onClick={handleAcceptTransfer}
+                      disabled={transferLoading}
+                      className="btn-success disabled:opacity-50"
+                    >
+                      {transferLoading ? 'Processing...' : '✅ Accept Transfer'}
+                    </button>
+                    <button 
+                      onClick={handleRejectTransfer}
+                      disabled={transferLoading}
+                      className="btn-danger disabled:opacity-50"
+                    >
+                      {transferLoading ? 'Processing...' : '❌ Reject Transfer'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           {(isOwner || isRegulator) && (
             <div className="card lg:col-span-2">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
               <div className="flex flex-wrap gap-3">
-                {isOwner && batch.status !== 5 && batch.status !== 6 && (
+                {isOwner && batch.status !== 5 && batch.status !== 6 && !pendingRequest && (
                   <button className="btn-primary" onClick={() => navigate('/transfers', { state: { batchId: batch.id } })}>
                     Initiate Transfer
                   </button>
+                )}
+                {isOwner && pendingRequest && (
+                  <div className="text-sm text-yellow-700 bg-yellow-50 px-4 py-2 rounded-lg">
+                    ⏳ Transfer pending - cannot initiate new transfer
+                  </div>
                 )}
                 <button className="btn-secondary">Update Status</button>
                 <button className="btn-secondary">View on Explorer</button>
