@@ -139,13 +139,30 @@ export const BlockchainProvider = ({ children }) => {
   // Listen for account changes
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts) => {
+      window.ethereum.on('accountsChanged', async (accounts) => {
         if (accounts.length === 0) {
           disconnectWallet();
         } else {
-          setAccount(accounts[0]);
-          if (contract) {
-            loadParticipantInfo(contract, accounts[0]);
+          console.log('🔄 Account changed to:', accounts[0]);
+          // Recreate provider, signer, and contract with new account
+          try {
+            const web3Provider = new ethers.BrowserProvider(window.ethereum);
+            const web3Signer = await web3Provider.getSigner();
+            const supplyChainContract = new ethers.Contract(
+              CONTRACT_ADDRESS,
+              SupplyChainABI,
+              web3Signer
+            );
+            
+            setProvider(web3Provider);
+            setSigner(web3Signer);
+            setContract(supplyChainContract);
+            setAccount(accounts[0]);
+            
+            await loadParticipantInfo(supplyChainContract, accounts[0]);
+            console.log('✅ Account switch complete');
+          } catch (err) {
+            console.error('❌ Error switching account:', err);
           }
         }
       });
@@ -161,7 +178,7 @@ export const BlockchainProvider = ({ children }) => {
         window.ethereum.removeListener('chainChanged', () => {});
       }
     };
-  }, [contract]);
+  }, []);
 
   // Utility functions
   const formatAddress = (address) => {

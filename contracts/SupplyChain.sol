@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/**
- * @title SupplyChain
- * @dev A comprehensive supply chain provenance contract for tracking batches
- * with off-chain artifact storage using IPFS and multi-signature transfers
- */
 contract SupplyChain {
     
     // ==================== ENUMS ====================
@@ -28,8 +23,6 @@ contract SupplyChain {
         Regulator,      // Oversees quality and compliance
         Airline         // End consumer
     }
-    
-    // ==================== STRUCTS ====================
     
     struct Participant {
         address participantAddress;
@@ -254,66 +247,38 @@ contract SupplyChain {
     
     // ==================== VIEW FUNCTIONS ====================
     
-    /**
-     * @dev Get total number of batches created
-     */
     function getTotalBatches() external view returns (uint256) {
         return _nextBatchId - 1;
     }
     
-    /**
-     * @dev Get all batches owned by a specific address
-     */
     function getBatchesByOwner(address owner) external view returns (uint256[] memory) {
         return ownerBatches[owner];
     }
     
-    /**
-     * @dev Get ownership history for a batch
-     */
     function getOwnershipHistory(uint256 batchId) external view batchExists(batchId) returns (address[] memory) {
         return ownershipHistory[batchId];
     }
     
-    /**
-     * @dev Get all certificates for a batch
-     */
     function getBatchCertificates(uint256 batchId) external view batchExists(batchId) returns (Certificate[] memory) {
         return batchCertificates[batchId];
     }
     
-    /**
-     * @dev Get audit trail for a batch
-     */
     function getBatchAuditTrail(uint256 batchId) external view batchExists(batchId) returns (AuditTrail[] memory) {
         return batchAuditTrail[batchId];
     }
     
-    /**
-     * @dev Get active transfer request for a batch (if any)
-     */
     function getActivePendingRequest(uint256 batchId) external view batchExists(batchId) returns (TransferRequest memory) {
         uint256 requestId = activePendingRequests[batchId];
         require(requestId != 0, "No active pending request");
         return transferRequests[requestId];
     }
     
-    /**
-     * @dev Check if participant is registered and active
-     */
     function isValidParticipant(address participant) external view returns (bool) {
         return participants[participant].isActive;
     }
     
     // ==================== PARTICIPANT MANAGEMENT ====================
     
-    /**
-     * @dev Register a new participant in the supply chain
-     * @param participant Address of the participant to register
-     * @param role Role of the participant
-     * @param name Name of the participant organization
-     * @param location Physical location of the participant
-     */
     function registerParticipant(
         address participant,
         ParticipantRole role,
@@ -337,10 +302,6 @@ contract SupplyChain {
         emit ParticipantRegistered(participant, role, name);
     }
     
-    /**
-     * @dev Deactivate a participant
-     * @param participant Address of the participant to deactivate
-     */
     function deactivateParticipant(address participant) external onlyContractOwner {
         require(participants[participant].isActive, "Participant not active");
         participants[participant].isActive = false;
@@ -349,14 +310,6 @@ contract SupplyChain {
     
     // ==================== BATCH LIFECYCLE IMPLEMENTATION ====================
     
-    /**
-     * @dev Register a new batch in the supply chain
-     * @param batchType Type of the batch (e.g., "Jet Fuel A1", "Diesel")
-     * @param quantity Quantity of the batch in appropriate units
-     * @param originLocation Physical location where batch was created
-     * @param metadataURI IPFS URI containing additional metadata
-     * @return batchId The ID of the newly created batch
-     */
     function registerBatch(
         string calldata batchType,
         uint256 quantity,
@@ -408,13 +361,6 @@ contract SupplyChain {
         return batchId;
     }
     
-    /**
-     * @dev Update the status of a batch
-     * @param batchId ID of the batch to update
-     * @param newStatus New status for the batch
-     * @param details Additional details about the status update
-     * @param locationData Current location data (optional)
-     */
     function updateStatus(
         uint256 batchId,
         BatchStatus newStatus,
@@ -454,10 +400,6 @@ contract SupplyChain {
         }
     }
     
-    /**
-     * @dev Get detailed batch information including current status
-     * @param batchId ID of the batch to retrieve
-     */
     function getBatchDetails(uint256 batchId) external view batchExists(batchId) returns (
         uint256 id,
         address creator,
@@ -489,14 +431,6 @@ contract SupplyChain {
     
     // ==================== MULTI-SIG OWNERSHIP TRANSFER ====================
     
-    /**
-     * @dev Request transfer of batch ownership to a new owner
-     * @param batchId ID of the batch to transfer
-     * @param newOwner Address of the proposed new owner
-     * @param reason Reason for the transfer
-     * @param transportDetails Details about transport method, route, etc.
-     * @return requestId The ID of the created transfer request
-     */
     function requestTransfer(
         uint256 batchId,
         address newOwner,
@@ -553,10 +487,6 @@ contract SupplyChain {
         return requestId;
     }
     
-    /**
-     * @dev Accept a pending transfer request (multi-sig second step)
-     * @param requestId ID of the transfer request to accept
-     */
     function acceptTransfer(uint256 requestId) external validTransferRequest(requestId) onlyRegisteredParticipant {
         TransferRequest storage request = transferRequests[requestId];
         Batch storage batch = batches[request.batchId];
@@ -598,11 +528,6 @@ contract SupplyChain {
         emit AuditEntry(batchId, msg.sender, "TRANSFER_ACCEPTED", "Ownership transferred", block.timestamp);
     }
     
-    /**
-     * @dev Reject a pending transfer request
-     * @param requestId ID of the transfer request to reject
-     * @param rejectionReason Reason for rejecting the transfer
-     */
     function rejectTransfer(uint256 requestId, string calldata rejectionReason) 
         external 
         validTransferRequest(requestId) 
@@ -638,10 +563,6 @@ contract SupplyChain {
         emit AuditEntry(batchId, msg.sender, "TRANSFER_REJECTED", rejectionReason, block.timestamp);
     }
     
-    /**
-     * @dev Cancel a transfer request by the original requester
-     * @param requestId ID of the transfer request to cancel
-     */
     function cancelTransfer(uint256 requestId) external {
         TransferRequest storage request = transferRequests[requestId];
         
@@ -675,9 +596,6 @@ contract SupplyChain {
     
     // ==================== INTERNAL HELPER FUNCTIONS ====================
     
-    /**
-     * @dev Validate if status transition is allowed
-     */
     function _isValidStatusTransition(BatchStatus from, BatchStatus to) internal pure returns (bool) {
         // Created can transition to InTransit or Rejected
         if (from == BatchStatus.Created) {
@@ -703,9 +621,6 @@ contract SupplyChain {
         return false;
     }
     
-    /**
-     * @dev Handle batch rejection logic
-     */
     function _handleBatchRejection(uint256 batchId, string memory reason) internal {
         // Additional logic for rejected batches can be implemented here
         // For example: notify previous owners, lock transfers, etc.
@@ -719,9 +634,6 @@ contract SupplyChain {
         }));
     }
     
-    /**
-     * @dev Convert BatchStatus enum to string for logging
-     */
     function _statusToString(BatchStatus status) internal pure returns (string memory) {
         if (status == BatchStatus.Created) return "Created";
         if (status == BatchStatus.InTransit) return "InTransit";
@@ -733,9 +645,6 @@ contract SupplyChain {
         return "Unknown";
     }
     
-    /**
-     * @dev Convert uint256 to string
-     */
     function _uint256ToString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
             return "0";
@@ -755,9 +664,6 @@ contract SupplyChain {
         return string(buffer);
     }
     
-    /**
-     * @dev Convert address to string for logging
-     */
     function _addressToString(address addr) internal pure returns (string memory) {
         bytes32 value = bytes32(uint256(uint160(addr)));
         bytes memory alphabet = "0123456789abcdef";
