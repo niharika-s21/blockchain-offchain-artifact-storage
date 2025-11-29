@@ -8,6 +8,7 @@ import CreateBatch from './pages/CreateBatch';
 import BatchDetails from './pages/BatchDetails';
 import Transfers from './pages/Transfers';
 import AuditTrail from './pages/AuditTrail';
+import BatchHistoryVisualization from './pages/BatchHistoryVisualization';
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/batches" element={<Batches />} />
             <Route path="/batches/create" element={<CreateBatch />} />
-            <Route path="/batches/:id" element={<BatchDetails />} />
+            <Route path="/batch/:id" element={<BatchDetails />} />
+            <Route path="/batch/:id/history" element={<BatchHistoryVisualization />} />
             <Route path="/transfers" element={<Transfers />} />
             <Route path="/audit" element={<AuditTrail />} />
             <Route path="*" element={<Navigate to="/" replace />} />

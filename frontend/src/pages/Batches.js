@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useBlockchain } from '../context/BlockchainContext';
 
 const Batches = () => {
   const { contract, participant, STATUS, formatAddress } = useBlockchain();
+  const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, my, available
@@ -146,10 +147,9 @@ const Batches = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {batches.map((batch) => (
-            <Link
+            <div
               key={batch.id}
-              to={`/batches/${batch.id}`}
-              className="card hover:shadow-xl transition transform hover:-translate-y-1"
+              className="card hover:shadow-xl transition"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -184,12 +184,30 @@ const Batches = () => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-100">
+              <div className="pt-4 border-t border-gray-100 space-y-2">
                 <p className="text-xs text-gray-500">
                   Created {new Date(batch.createdAt * 1000).toLocaleDateString()}
                 </p>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => navigate(`/batch/${batch.id}`)}
+                    className="flex-1 btn-primary text-sm py-2"
+                  >
+                    View Details
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/batch/${batch.id}/history`);
+                    }}
+                    className="flex-1 btn-secondary text-sm py-2"
+                    title="View History Timeline"
+                  >
+                    📊 History
+                  </button>
+                </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

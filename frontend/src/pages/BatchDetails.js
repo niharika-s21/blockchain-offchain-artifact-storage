@@ -197,7 +197,7 @@ const BatchDetails = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 flex items-center justify-between">
         <nav className="flex space-x-8">
           {['details', 'history', 'audit'].map((tab) => (
             <button
@@ -213,6 +213,12 @@ const BatchDetails = () => {
             </button>
           ))}
         </nav>
+        <button
+          onClick={() => navigate(`/batch/${id}/history`)}
+          className="btn-secondary mb-2"
+        >
+          📊 View Event Timeline
+        </button>
       </div>
 
       {/* Details Tab */}
