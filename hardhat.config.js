@@ -8,7 +8,7 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 200, // Balanced optimization
       },
     },
   },
@@ -32,11 +32,19 @@ module.exports = {
       gasPrice: "auto",
     },
     
-    // Polygon Mumbai Testnet (optional)
+    // Polygon Mumbai Testnet (deprecated - use Amoy)
     mumbai: {
       url: process.env.MUMBAI_RPC_URL || "https://rpc-mumbai.maticvigil.com",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 80001,
+      gasPrice: "auto",
+    },
+    
+    // Polygon Amoy Testnet (NEW - replaces Mumbai)
+    amoy: {
+      url: process.env.AMOY_RPC_URL || "https://rpc-amoy.polygon.technology",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 80002,
       gasPrice: "auto",
     },
   },
@@ -45,6 +53,7 @@ module.exports = {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY || "",
       polygonMumbai: process.env.POLYGONSCAN_API_KEY || "",
+      polygonAmoy: process.env.POLYGONSCAN_API_KEY || "",
     },
   },
   paths: {

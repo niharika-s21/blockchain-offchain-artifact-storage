@@ -1,0 +1,64 @@
+{
+  "network": "amoy",
+  "chainId": 80002,
+  "contractAddress": "0xa0398D83e2AEe3CF9b4CCeC19390Ca16B64499FA",
+  "deployer": "UPDATE_WITH_YOUR_ADDRESS",
+  "deployedAt": "2025-12-01",
+  "blockExplorer": "https://amoy.polygonscan.com/address/0xa0398D83e2AEe3CF9b4CCeC19390Ca16B64499FA",
+  "rpcUrl": "https://rpc-amoy.polygon.technology",
+  "compiler": {
+    "version": "0.8.19",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    }
+  },
+  "features": {
+    "batchManagement": true,
+    "statusTracking": true,
+    "ownershipTransfers": true,
+    "multiSigTransfers": true,
+    "participantManagement": true,
+    "auditTrail": true,
+    "certificates": false,
+    "note": "Certificate feature commented out to reduce contract size"
+  },
+  "roles": {
+    "0": "None",
+    "1": "Refinery",
+    "2": "Distributor",
+    "3": "Terminal",
+    "4": "Regulator",
+    "5": "Airline"
+  },
+  "contractFunctions": {
+    "participant": [
+      "registerParticipant",
+      "deactivateParticipant",
+      "isValidParticipant"
+    ],
+    "batch": [
+      "registerBatch",
+      "updateStatus",
+      "getBatchDetails",
+      "getTotalBatches"
+    ],
+    "transfer": [
+      "requestTransfer",
+      "acceptTransfer",
+      "rejectTransfer",
+      "cancelTransfer",
+      "getActivePendingRequest"
+    ],
+    "audit": [
+      "getBatchAuditTrail",
+      "getOwnershipHistory"
+    ]
+  },
+  "notes": [
+    "Deployed using Remix IDE on Polygon Amoy Testnet",
+    "Contract owner must register participants manually",
+    "Frontend updated with contract address",
+    "Run 'npx hardhat run scripts/register-participants-amoy.js --network amoy' to register participants"
+  ]
+}

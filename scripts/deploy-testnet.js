@@ -39,10 +39,12 @@ async function main() {
     console.log("\n📦 Deploying SupplyChain Contract...");
     console.log("-".repeat(70));
     
-    // Deploy the contract
+    // Deploy the contract with default network gas settings
     const SupplyChain = await ethers.getContractFactory("SupplyChain");
     
     console.log("   Compiling contract...");
+    console.log("   Using network default gas price...");
+    
     const supplyChain = await SupplyChain.deploy();
     
     console.log("   Waiting for deployment transaction...");

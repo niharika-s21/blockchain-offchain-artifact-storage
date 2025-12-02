@@ -23,8 +23,8 @@ export const BlockchainProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  // Contract address - update this after deployment
-  const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  // Contract address - Deployed on Polygon Amoy Testnet
+  const CONTRACT_ADDRESS = "0xa0398D83e2AEe3CF9b4CCeC19390Ca16B64499FA"
 
   // Role names mapping
   const ROLES = {
