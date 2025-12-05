@@ -2,11 +2,11 @@
 
 ## 📘 Project Overview
 This project implements a **hybrid blockchain framework** that enables secure, verifiable storage of supply-chain artifacts without placing large or private data directly on-chain.  
-It combines **on-chain metadata and integrity verification** with **off-chain artifact storage** (e.g., IPFS), maintaining transparency, provenance, and data integrity across distributed participants.
+It combines on-chain data integrity with off-chain artifact storage capabilities.
 
 ## Contents
 - `contracts/` - Draft Solidity contracts:
-  - `BatchProvenance.sol` - main draft contract
+  - `SupplyChain.sol` - main draft contract
   - `interfaces/` - solidity interfaces / signatures
 - `README.md` - this file
 - `docs/` - design notes & diagrams
