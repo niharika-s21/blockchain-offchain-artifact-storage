@@ -1,8 +1,7 @@
-# Blockchain Off-Chain Artifact Storage
+# Blockchain On-Chain Artifact Storage
 
 ## 📘 Project Overview
-This project implements a **hybrid blockchain framework** that enables secure, verifiable storage of supply-chain artifacts without placing large or private data directly on-chain.  
-It combines **on-chain metadata and integrity verification** with **off-chain artifact storage** (e.g., IPFS), maintaining transparency, provenance, and data integrity across distributed participants.
+This project presents JetChain, a permissioned, Ethereum-compatible blockchain system designed to track jet fuel batches from refineries to distributors, airport terminals, and airlines. The system models each batch as an on-chain asset with a defined lifecycle and enforces role-based access control for all participants. To ensure secure and auditable custody transfer, JetChain implements a two-step, multi-party approval workflow in which both the current owner and the receiving party must confirm the transfer before ownership changes.
 
 ## Contents
 - `contracts/` - Draft Solidity contracts:
