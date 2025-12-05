@@ -10,8 +10,8 @@ It combines on-chain data integrity with off-chain artifact storage capabilities
   - `interfaces/` - solidity interfaces / signatures
 - `README.md` - this file
 - `docs/` - design notes & diagrams
-- `frontend/` - skeleton React app (to be filled)
-- `scripts/` - deploy & test scripts (Hardhat/Foundry/Truffle templates)
+- `frontend/` - React app
+- `scripts/` - deploy & test scripts (Hardhat Local)
 - `LICENSE` - project license
 
 ## 📦 Quick Setup
@@ -39,7 +39,7 @@ npx hardhat node
 npx hardhat run scripts/deploy-and-demo.js --network localhost
 ```
 
-## 🖥️ Frontend Setup (NEW!)
+## 🖥️ Frontend Setup
 
 The project now includes a complete React.js frontend with TailwindCSS!
 
