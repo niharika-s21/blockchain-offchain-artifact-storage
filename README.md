@@ -1,4 +1,4 @@
-# Blockchain Off-Chain Artifact Storage
+# Blockchain On-Chain Artifact Storage
 
 ## 📘 Project Overview
 This project implements a **hybrid blockchain framework** that enables secure, verifiable storage of supply-chain artifacts without placing large or private data directly on-chain.  
