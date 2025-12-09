@@ -62,21 +62,40 @@ const BatchDetails = () => {
       })));
 
       // Check for pending transfer
+      console.log('🔍 Checking for pending transfer...');
+      console.log('   pendingOwner:', batchData.pendingOwner);
+      
       if (batchData.pendingOwner !== '0x0000000000000000000000000000000000000000') {
+        console.log('   ✅ Batch has pendingOwner, fetching request...');
         try {
-          const request = await contract.getActivePendingRequest(id);
-          setPendingRequest({
-            requestId: Number(await contract.activePendingRequests(id)),
-            from: request.from,
-            to: request.to,
-            reason: request.reason,
-            transportDetails: request.transportDetails,
-            requestedAt: Number(request.requestedAt),
-            isActive: request.isActive
-          });
+          // First get the request ID
+          const requestId = await contract.activePendingRequests(id);
+          console.log('   📋 Active request ID:', requestId.toString());
+          
+          if (requestId > 0) {
+            // Then get the full request details
+            const request = await contract.getActivePendingRequest(id);
+            console.log('   📦 Request details:', request);
+            
+            setPendingRequest({
+              requestId: Number(requestId),
+              from: request.from,
+              to: request.to,
+              reason: request.reason,
+              transportDetails: request.transportDetails,
+              requestedAt: Number(request.requestedAt),
+              isActive: request.isActive
+            });
+            console.log('   ✅ Pending request loaded successfully');
+          } else {
+            console.log('   ⚠️ Request ID is 0 - no active request');
+          }
         } catch (err) {
-          console.log('No active pending request');
+          console.error('   ❌ Error loading pending request:', err.message);
+          console.error('   Full error:', err);
         }
+      } else {
+        console.log('   ℹ️ No pending owner (address is zero)');
       }
 
       setLoading(false);
@@ -89,6 +108,19 @@ const BatchDetails = () => {
   const isOwner = batch && batch.currentOwner.toLowerCase() === participant?.address.toLowerCase();
   const isRegulator = participant?.role === 4;
   const isPendingOwner = batch && batch.pendingOwner.toLowerCase() === participant?.address.toLowerCase();
+
+  // Debug logging
+  useEffect(() => {
+    if (batch && participant) {
+      console.log('=== TRANSFER DEBUG ===');
+      console.log('Batch pendingOwner:', batch.pendingOwner);
+      console.log('Current participant address:', participant.address);
+      console.log('Addresses match (isPendingOwner):', isPendingOwner);
+      console.log('Has pendingRequest:', !!pendingRequest);
+      console.log('Should show accept buttons:', !!(pendingRequest && isPendingOwner));
+      console.log('=====================');
+    }
+  }, [batch, participant, pendingRequest, isPendingOwner]);
 
   const handleAcceptTransfer = async () => {
     if (!pendingRequest) return;
